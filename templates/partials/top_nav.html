@@ -1,0 +1,132 @@
+<nav class="navbar dashboard-nav">
+    <div class="nav-left">
+        <div class="logo-mark">SB</div>
+        <div class="logo-text">
+            <span>SecureBank</span>
+            <small>Digital Banking</small>
+        </div>
+    </div>
+
+    <div class="nav-center">
+        <div class="global-search">
+            <input type="text" placeholder="Search services, deposits, statements…"
+                aria-label="Search banking services" />
+            <span class="search-icon">🔍</span>
+        </div>
+    </div>
+
+    <div class="nav-right">
+        <a href="{{ url_for('dashboard') }}"
+            class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}">Home</a>
+        <a href="{{ url_for('profile') }}"
+            class="nav-link {% if request.endpoint == 'profile' %}active{% endif %}">Accounts</a>
+        <a href="{{ url_for('transfer') }}"
+            class="nav-link {% if request.endpoint == 'transfer' %}active{% endif %}">Send Money</a>
+
+        <button class="icon-btn nav-icon" aria-label="Notifications" onclick="showNotifications()">
+            <span class="icon-bell">🔔</span>
+            <span class="notification-badge">3</span>
+        </button>
+        <button class="icon-btn nav-icon" aria-label="Help & Support" onclick="showHelp()">
+            <span>❓</span>
+        </button>
+
+        <div class="user-profile-dropdown">
+            <button class="user-avatar-btn" onclick="toggleUserDropdown()" aria-label="User menu">
+                <div class="user-avatar">
+                    <span>{{ session.user_name[0] if session.user_name else 'U' }}</span>
+                </div>
+                <span class="user-name-short">{{ (session.user_name.split()[0]) if session.user_name else 'User'
+                    }}</span>
+                <span class="dropdown-arrow">▼</span>
+            </button>
+            <div class="user-dropdown-menu" id="userDropdown">
+                <a href="{{ url_for('profile') }}">👤 My Profile</a>
+                <a href="{{ url_for('dashboard') }}">🏠 Dashboard</a>
+                <a href="{{ url_for('transfer') }}">💸 Send Money</a>
+                <div class="dropdown-divider"></div>
+                <a href="{{ url_for('logout') }}">🚪 Logout</a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- Notifications Modal -->
+<div class="modal" id="notificationsModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Notifications</h3>
+            <button class="modal-close" onclick="closeModal('notificationsModal')">×</button>
+        </div>
+        <div class="modal-body">
+            <div class="notification-item">
+                <span class="notification-icon"></span>
+                <div>
+                    <strong>Transaction Successful</strong>
+                    <p>Your recent transfer was completed</p>
+                    <small>2 hours ago</small>
+                </div>
+            </div>
+            <div class="notification-item">
+                <span class="notification-icon"></span>
+                <div>
+                    <strong>Security Alert</strong>
+                    <p>New login detected on your account</p>
+                    <small>1 day ago</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Help Modal -->
+<div class="modal" id="helpModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Help & Support</h3>
+            <button class="modal-close" onclick="closeModal('helpModal')">×</button>
+        </div>
+        <div class="modal-body">
+            <p style="color:#cbd5e1; margin-bottom: 14px;">Need assistance? We're here to help.</p>
+            <div class="help-options">
+                <a href="#" class="help-link" onclick="return false;">📞 Contact Support</a>
+                <a href="#" class="help-link" onclick="return false;">💬 Live Chat</a>
+                <a href="#" class="help-link" onclick="return false;">❓ FAQ</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // User dropdown
+    function toggleUserDropdown() {
+        const dropdown = document.getElementById('userDropdown');
+        dropdown.classList.toggle('show');
+    }
+
+    function showNotifications() {
+        document.getElementById('notificationsModal').style.display = 'flex';
+    }
+
+    function showHelp() {
+        document.getElementById('helpModal').style.display = 'flex';
+    }
+
+    function closeModal(modalId) {
+        document.getElementById(modalId).style.display = 'none';
+    }
+
+    // Close dropdown + modals on outside click
+    window.addEventListener('click', function (event) {
+        const dropdown = document.getElementById('userDropdown');
+        const profileWrap = document.querySelector('.user-profile-dropdown');
+        if (dropdown && dropdown.classList.contains('show') && profileWrap && !profileWrap.contains(event.target)) {
+            dropdown.classList.remove('show');
+        }
+
+        const modals = document.querySelectorAll('.modal');
+        modals.forEach(modal => {
+            if (event.target === modal) modal.style.display = 'none';
+        });
+    });
+</script>

@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}SecureBank Login{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <div class="login-wrapper">
+        <div class="login-box premium-login">
+            <div class="secure-header">
+                <div class="secure-title">
+                    <span class="lock-icon"></span>
+                    <div>
+                        <h1>Secure Login</h1>
+                        <p>Protected by enterprise‑grade encryption</p>
+                    </div>
+                </div>
+                <div class="secure-badge">Bank‑grade security</div>
+            </div>
+
+            {% if masked_email %}
+            <div class="returning-user">
+                <p class="returning-label">Welcome back</p>
+                <p class="masked-email">{{ masked_email }}</p>
+                {% if last_login %}
+                <p class="last-login">
+                    Last successful login:
+                    <span>{{ last_login }}</span>
+                    {% if last_device %}
+                    · <span class="device-label">{{ last_device }}</span>
+                    {% endif %}
+                </p>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <form method="POST" action="{{ url_for('login') }}" class="login-form">
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" name="email" required autofocus placeholder="Enter your email"
+                        class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required placeholder="Enter your password"
+                        class="form-control">
+                </div>
+                <div class="login-actions">
+                    <div class="login-meta">
+                        <span class="meta-pill">SMS alerts enabled</span>
+                        <span class="meta-pill">2‑factor ready</span>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-login">Sign in securely</button>
+                </div>
+            </form>
+            <div class="demo-info">
+                <p><strong>Demo Credentials:</strong></p>
+                <p>Email: john.doe@email.com</p>
+                <p>Password: password123</p>
+            </div>
+        </div>
+
+        <aside class="security-sidebar">
+            <h2>Security Tips</h2>
+            <ul id="security-tips">
+                <li class="active">Never share your OTP, PIN, or password with anyone – even SecureBank staff.</li>
+                <li>Always check the browser address bar for <strong>https://</strong> and the lock icon before logging
+                    in.</li>
+                <li>Enable screen lock on your devices and avoid using public Wi‑Fi for banking.</li>
+                <li>Log out after every session, especially on shared or public computers.</li>
+            </ul>
+            <p class="tip-indicator">Rotating security tips every few seconds.</p>
+        </aside>
+    </div>
+</div>
+
+<script>
+    (function () {
+        const tips = document.querySelectorAll('#security-tips li');
+        if (!tips.length) return;
+        let index = 0;
+        setInterval(() => {
+            tips[index].classList.remove('active');
+            index = (index + 1) % tips.length;
+            tips[index].classList.add('active');
+        }, 5000);
+    })();
+</script>
+{% endblock %}

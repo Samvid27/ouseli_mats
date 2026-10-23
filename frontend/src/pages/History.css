@@ -1,0 +1,58 @@
+.hist-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    gap: 16px;
+}
+
+.hist-acc-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px;
+}
+
+.hist-acc-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.hist-acc-num {
+    font-size: 13px;
+    font-family: 'Courier New', monospace;
+    color: var(--text);
+    font-weight: 600;
+}
+
+.hist-acc-branch {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.hist-acc-balance {
+    text-align: right;
+}
+
+.hist-bal-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+}
+
+.hist-bal {
+    font-size: 22px;
+    font-weight: 800;
+    color: #4ade80;
+}
+
+.hist-empty {
+    text-align: center;
+    color: var(--text-muted);
+    padding: 48px;
+    margin-top: 20px;
+}

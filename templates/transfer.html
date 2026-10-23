@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}Transfer Funds - SecureBank{% endblock %}
+
+{% block content %}
+{% include "partials/top_nav.html" %}
+
+<div class="dashboard-shell">
+    <section class="fin-card">
+        <header class="section-header">
+            <div>
+                <h2>Send Money</h2>
+                <p class="section-subtitle">ACID protected transfer with rollback on failure</p>
+            </div>
+            <span class="secure-pill">Secure Transfer</span>
+            <span class="ai-badge-header">🤖 AI Fraud Guard Active</span>
+        </header>
+
+        <form method="POST" action="{{ url_for('transfer') }}" class="send-money-form">
+            <div class="form-group">
+                <label for="from_account">From Account</label>
+                <select id="from_account" name="from_account" required class="form-control">
+                    <option value="">Select an account</option>
+                    {% for account in accounts %}
+                    <option value="{{ account.account_id }}">
+                        {{ account.account_number }} - {{ account.account_type }} (Balance: ${{
+                        "%.2f"|format(account.balance) }})
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="beneficiary_name">Beneficiary Name</label>
+                <input type="text" id="beneficiary_name" name="beneficiary_name" required
+                    placeholder="Enter beneficiary full name" class="form-control">
+            </div>
+
+            <div class="form-row">
+                <div class="form-group half">
+                    <label for="to_account">Beneficiary Account Number</label>
+                    <input type="text" id="to_account" name="to_account" required pattern="[0-9]{12}" maxlength="12"
+                        placeholder="Enter 12-digit account number" class="form-control">
+                    <small style="color: #666; font-size: 12px; margin-top: 4px; display: block;">
+                        Example: 100000000003 (Jane Smith) or 100000000004 (Bob Wilson)
+                    </small>
+                </div>
+
+                <div class="form-group half">
+                    <label for="ifsc">IFSC Code</label>
+                    <input type="text" id="ifsc" name="ifsc" required minlength="11" maxlength="11"
+                        placeholder="e.g., ICIC0002002" class="form-control">
+                </div>
+            </div>
+
+            {% if other_accounts %}
+            <div class="fin-card fin-card-inset">
+                <strong style="font-size: 13px;">Available Accounts to Transfer To</strong>
+                <ul style="margin: 10px 0 0 0; padding-left: 20px; font-size: 12px;">
+                    {% for acc in other_accounts %}
+                    <li style="margin: 4px 0;">
+                        <strong>{{ acc.full_name }}</strong>: Account #{{ acc.account_number }}
+                        (IFSC: {{ acc.ifsc_code }}, Branch: {{ acc.branch_name }})
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            <div class="form-group">
+                <label for="bank_name">Bank & Branch</label>
+                <input type="text" id="bank_name" name="bank_name" required
+                    placeholder="e.g., State Bank of India, MG Road Branch" class="form-control">
+            </div>
+
+            <div class="form-group">
+                <label for="amount">Amount</label>
+                <input type="number" id="amount" name="amount" required min="0.01" step="0.01"
+                    placeholder="Enter amount to transfer" class="form-control">
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-full">
+                <span>Proceed</span>
+                <span class="btn-arrow"></span>
+            </button>
+        </form>
+
+        <div class="fin-card fin-card-inset">
+            <h3 style="color:#f9fafb; font-size: 16px; margin-bottom: 10px;">ACID Transaction Features</h3>
+            <ul style="list-style:none; padding:0; margin:0; color:#cbd5e1; font-size:13px;">
+                <li><strong>Atomicity:</strong> All changes succeed or all are rolled back</li>
+                <li><strong>Consistency:</strong> Database remains in valid state</li>
+                <li><strong>Isolation:</strong> Row-level locking prevents concurrent conflicts</li>
+                <li><strong>Durability:</strong> Committed changes are permanent</li>
+            </ul>
+        </div>
+</div>
+{% endblock %}

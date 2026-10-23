@@ -1,0 +1,476 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - SecureBank{% endblock %}
+
+{% block content %}
+<!-- Top Navigation Bar -->
+<nav class="navbar dashboard-nav">
+    <div class="nav-left">
+        <div class="logo-mark">SB</div>
+        <div class="logo-text">
+            <span>SecureBank</span>
+            <small>Digital Banking</small>
+        </div>
+    </div>
+
+    <div class="nav-center">
+        <div class="global-search">
+            <input type="text" placeholder="Search services, deposits, statements…" aria-label="Search banking services"
+                id="global-search-input" />
+            <span class="search-icon">🔍</span>
+        </div>
+    </div>
+
+    <div class="nav-right">
+        <a href="{{ url_for('dashboard') }}" class="nav-link active">Home</a>
+        <a href="{{ url_for('profile') }}" class="nav-link">Accounts</a>
+        <a href="{{ url_for('transfer') }}" class="nav-link">Send Money</a>
+
+        <button class="icon-btn nav-icon" aria-label="Notifications" onclick="showNotifications()">
+            <span class="icon-bell">🔔</span>
+            <span class="notification-badge">3</span>
+        </button>
+        <button class="icon-btn nav-icon" aria-label="Help & Support" onclick="showHelp()">
+            <span>❓</span>
+        </button>
+
+        <div class="user-profile-dropdown">
+            <button class="user-avatar-btn" onclick="toggleUserDropdown()" aria-label="User menu">
+                <div class="user-avatar">
+                    <span>{{ user_name[0] if user_name else 'U' }}</span>
+                </div>
+                <span class="user-name-short">{{ user_name.split()[0] if user_name else 'User' }}</span>
+                <span class="dropdown-arrow">▼</span>
+            </button>
+            <div class="user-dropdown-menu" id="userDropdown">
+                <a href="{{ url_for('profile') }}">👤 My Profile</a>
+                <a href="{{ url_for('dashboard') }}">🏠 Dashboard</a>
+                <a href="{{ url_for('transfer') }}">💸 Send Money</a>
+                <div class="dropdown-divider"></div>
+                <a href="{{ url_for('logout') }}">🚪 Logout</a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<div class="dashboard-shell">
+    <!-- Welcome Section -->
+    <section class="welcome-card">
+        <div class="welcome-content">
+            <p class="welcome-label">Welcome back,</p>
+            <h1>{{ user_name }}</h1>
+            {% if last_login %}
+            <p class="last-login-text">
+                Last login: <strong>{{ last_login }}</strong>
+            </p>
+            {% else %}
+            <p class="last-login-text">
+                First time logging in
+            </p>
+            {% endif %}
+        </div>
+        <div class="welcome-meta">
+            <span class="secure-pill">Banking-grade security</span>
+            <span class="verified-badge-small">Verified Account</span>
+        </div>
+    </section>
+
+    <div class="dashboard-grid">
+        <!-- Account Overview Card -->
+        <section class="account-card-main">
+            <header class="section-header">
+                <div>
+                    <h2>Account Overview</h2>
+                    <p class="section-subtitle">Your primary savings & current accounts</p>
+                </div>
+            </header>
+
+            {% if accounts %}
+            {% for account in accounts %}
+            <div class="account-main-body {% if loop.index > 1 %}account-secondary{% endif %}">
+                <div class="account-meta">
+                    <div class="account-type-badge">{{ account.account_type }} Account</div>
+                    <p class="account-number">
+                        A/C: <span class="account-number-masked" data-full="{{ account.account_number }}">
+                            •••• •••• {{ account.account_number[-4:] if account.account_number else '0000' }}
+                        </span>
+                        <button class="copy-btn-small" onclick="copyAccountNumber('{{ account.account_number }}', this)"
+                            aria-label="Copy account number">
+                            Copy
+                        </button>
+                    </p>
+                    <p class="account-branch">{{ account.branch_name if account.branch_name else 'Main Branch' }}</p>
+                </div>
+
+                <div class="account-balance-block">
+                    <p class="balance-label">Available Balance</p>
+                    <div class="balance-row">
+                        <span class="balance-value" id="balance-{{ account.account_id }}"
+                            data-full="${{ '%.2f'|format(account.balance) }}" data-hidden="true">••••••</span>
+                        <button type="button" class="icon-btn balance-toggle"
+                            onclick="toggleBalance({{ account.account_id }})" aria-label="Show or hide balance"
+                            id="toggle-{{ account.account_id }}">
+                            👁
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="account-main-actions">
+                <a href="{{ url_for('history', account_id=account.account_id) }}" class="btn btn-outline">
+                    Get Statement
+                </a>
+                <a href="{{ url_for('profile') }}" class="btn btn-secondary">
+                    View Account Details
+                </a>
+            </div>
+            {% if not loop.last %}
+            <hr class="account-divider">{% endif %}
+            {% endfor %}
+            {% else %}
+            <div class="no-accounts">
+                <p>No active accounts found. Please contact support.</p>
+            </div>
+            {% endif %}
+        </section>
+
+        <!-- Quick Links Panel -->
+        <aside class="quick-links-card">
+            <h2>Quick Links</h2>
+            <ul class="quick-links-list">
+                <li>
+                    <a href="{{ url_for('history', account_id=accounts[0].account_id) if accounts else '#' }}"
+                        class="quick-link-item">
+                        <span class="quick-link-icon">📜</span>
+                        <div>
+                            <strong>Account Statement</strong>
+                            <small>View transaction history</small>
+                        </div>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="quick-link-item" onclick="showNewAccountModal(); return false;">
+                        <span class="quick-link-icon">🏦</span>
+                        <div>
+                            <strong>Open New Account</strong>
+                            <small>Savings, Current, or FD</small>
+                        </div>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('transfer') }}" class="quick-link-item">
+                        <span class="quick-link-icon">💸</span>
+                        <div>
+                            <strong>Send Money</strong>
+                            <small>Transfer funds instantly</small>
+                        </div>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('profile') }}" class="quick-link-item">
+                        <span class="quick-link-icon">👤</span>
+                        <div>
+                            <strong>My Profile</strong>
+                            <small>Manage account settings</small>
+                        </div>
+                    </a>
+                </li>
+            </ul>
+
+            <div class="ai-side-card">
+                <p class="ai-badge-small">🤖 AI INSIGHTS</p>
+                <p style="font-size: 11px; color: #94a3b8; margin: 4px 0 8px 0;">Predicting your balance trend based on
+                    past 30 days.</p>
+                <div id="ai-forecast-container">
+                    <button class="btn-ai-predict" onclick="loadAIPredictions()">📈 Generate Forecast</button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Send Money Widget -->
+        <section class="send-money-card">
+            <header class="section-header">
+                <div>
+                    <h2>Send Money</h2>
+                    <p class="section-subtitle">Transfer securely within India or abroad</p>
+                </div>
+                <div class="transfer-toggle">
+                    <button class="toggle-btn active" id="toggle-domestic"
+                        onclick="setTransferType('domestic')">Domestic</button>
+                    <button class="toggle-btn" id="toggle-international"
+                        onclick="setTransferType('international')">International</button>
+                </div>
+            </header>
+
+            <div class="transfer-options">
+                <button class="transfer-option-btn active" id="option-own" onclick="setTransferOption('own')">
+                    Own Account
+                </button>
+                <button class="transfer-option-btn" id="option-other" onclick="setTransferOption('other')">
+                    Other Bank Account
+                </button>
+            </div>
+
+            <form method="POST" action="{{ url_for('transfer') }}" class="send-money-form" id="sendMoneyForm">
+                <input type="hidden" name="transfer_type" id="transfer_type" value="domestic">
+                <input type="hidden" name="transfer_option" id="transfer_option" value="own">
+
+                <div class="form-group">
+                    <label for="from_account_dashboard">From Account</label>
+                    <select id="from_account_dashboard" name="from_account" required class="form-control">
+                        <option value="">Select your account</option>
+                        {% for account in accounts %}
+                        <option value="{{ account.account_id }}">
+                            {{ account.account_number }} - {{ account.account_type }} (${{
+                            "%.2f"|format(account.balance) }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group" id="to-account-group">
+                    <label for="to_account_dashboard">To Account</label>
+                    <input id="to_account_dashboard" name="to_account" type="text" required pattern="[0-9]{12}"
+                        maxlength="12" placeholder="Enter 12-digit account number" class="form-control" />
+                    <small class="form-hint">Enter beneficiary account number</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="beneficiary_name_dashboard">Beneficiary Name</label>
+                    <input id="beneficiary_name_dashboard" name="beneficiary_name" type="text" required
+                        placeholder="Enter beneficiary full name" class="form-control" />
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group half">
+                        <label for="ifsc_dashboard">IFSC Code</label>
+                        <input id="ifsc_dashboard" name="ifsc" type="text" required minlength="11" maxlength="11"
+                            placeholder="e.g., SBIN0000123" class="form-control" />
+                    </div>
+                    <div class="form-group half">
+                        <label for="amount_dashboard">Amount</label>
+                        <input id="amount_dashboard" name="amount" type="number" required min="1" step="0.01"
+                            placeholder="0.00" class="form-control" />
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="bank_name_dashboard">Bank & Branch</label>
+                    <input id="bank_name_dashboard" name="bank_name" type="text" required
+                        placeholder="e.g., State Bank of India, MG Road Branch" class="form-control" />
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-full">
+                    <span>Proceed</span>
+                    <span class="btn-arrow"></span>
+                </button>
+            </form>
+        </section>
+    </div>
+</div>
+
+<!-- Notifications Modal -->
+<div class="modal" id="notificationsModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Notifications</h3>
+            <button class="modal-close" onclick="closeModal('notificationsModal')">×</button>
+        </div>
+        <div class="modal-body">
+            <div class="notification-item">
+                <span class="notification-icon"></span>
+                <div>
+                    <strong>Transaction Successful</strong>
+                    <p>Your transfer of $500.00 was completed</p>
+                    <small>2 hours ago</small>
+                </div>
+            </div>
+            <div class="notification-item">
+                <span class="notification-icon"></span>
+                <div>
+                    <strong>Security Alert</strong>
+                    <p>New login detected from Chrome browser</p>
+                    <small>1 day ago</small>
+                </div>
+            </div>
+            <div class="notification-item">
+                <span class="notification-icon"></span>
+                <div>
+                    <strong>Statement Ready</strong>
+                    <p>Your monthly statement is available for download</p>
+                    <small>3 days ago</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Help Modal -->
+<div class="modal" id="helpModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Help & Support</h3>
+            <button class="modal-close" onclick="closeModal('helpModal')">×</button>
+        </div>
+        <div class="modal-body">
+            <p>Need assistance? We're here to help!</p>
+            <div class="help-options">
+                <a href="#" class="help-link">📞 Contact Support</a>
+                <a href="#" class="help-link">💬 Live Chat</a>
+                <a href="#" class="help-link">📧 Email Us</a>
+                <a href="#" class="help-link">❓ FAQ</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Balance toggle
+    function toggleBalance(accountId) {
+        const balanceEl = document.getElementById(`balance-${accountId}`);
+        const toggleBtn = document.getElementById(`toggle-${accountId}`);
+        const fullValue = balanceEl.getAttribute('data-full');
+        const isHidden = balanceEl.getAttribute('data-hidden') === 'true';
+
+        if (isHidden) {
+            balanceEl.textContent = fullValue;
+            balanceEl.setAttribute('data-hidden', 'false');
+            toggleBtn.textContent = '👁‍🗨';
+        } else {
+            balanceEl.textContent = '••••••';
+            balanceEl.setAttribute('data-hidden', 'true');
+            toggleBtn.textContent = '👁';
+        }
+    }
+
+    // Copy account number (with fallback for non-HTTPS environments)
+    function copyAccountNumber(accountNumber, btn) {
+        function showCopyToast(b, success) {
+            const original = b.textContent;
+            b.textContent = success ? '✓ Copied!' : '❌ Failed';
+            b.style.background = success ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)';
+            b.style.color = success ? '#10b981' : '#ef4444';
+            setTimeout(() => {
+                b.textContent = original;
+                b.style.background = '';
+                b.style.color = '';
+            }, 2000);
+        }
+
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(accountNumber)
+                .then(() => showCopyToast(btn, true))
+                .catch(() => fallbackCopy(accountNumber, btn, showCopyToast));
+        } else {
+            fallbackCopy(accountNumber, btn, showCopyToast);
+        }
+    }
+
+    function fallbackCopy(text, btn, showToast) {
+        const tempInput = document.createElement('input');
+        tempInput.value = text;
+        document.body.appendChild(tempInput);
+        tempInput.select();
+        tempInput.setSelectionRange(0, 99999);
+        try {
+            const success = document.execCommand('copy');
+            if (btn && showToast) showToast(btn, success);
+        } catch (err) {
+            if (btn) btn.textContent = '❌ Failed';
+        }
+        document.body.removeChild(tempInput);
+    }
+
+    // Transfer type toggle
+    function setTransferType(type) {
+        document.getElementById('transfer_type').value = type;
+        document.getElementById('toggle-domestic').classList.toggle('active', type === 'domestic');
+        document.getElementById('toggle-international').classList.toggle('active', type === 'international');
+    }
+
+    // Transfer option toggle
+    function setTransferOption(option) {
+        document.getElementById('transfer_option').value = option;
+        document.getElementById('option-own').classList.toggle('active', option === 'own');
+        document.getElementById('option-other').classList.toggle('active', option === 'other');
+    }
+
+    // User dropdown
+    function toggleUserDropdown() {
+        const dropdown = document.getElementById('userDropdown');
+        dropdown.classList.toggle('show');
+    }
+
+    // Close dropdowns when clicking outside
+    window.onclick = function (event) {
+        if (!event.target.matches('.user-avatar-btn') && !event.target.closest('.user-profile-dropdown')) {
+            const dropdown = document.getElementById('userDropdown');
+            if (dropdown.classList.contains('show')) {
+                dropdown.classList.remove('show');
+            }
+        }
+    }
+
+    // Modals
+    function showNotifications() {
+        document.getElementById('notificationsModal').style.display = 'flex';
+    }
+
+    function showHelp() {
+        document.getElementById('helpModal').style.display = 'flex';
+    }
+
+    function closeModal(modalId) {
+        document.getElementById(modalId).style.display = 'none';
+    }
+
+    function showNewAccountModal() {
+        alert('New Account feature coming soon!');
+    }
+
+    // Close modals on outside click
+    window.onclick = function (event) {
+        const modals = document.querySelectorAll('.modal');
+        modals.forEach(modal => {
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+    }
+    // AI Forecasting
+    function loadAIPredictions() {
+        const container = document.getElementById('ai-forecast-container');
+        const accountId = "{{ accounts[0].account_id if accounts else '' }}";
+
+        if (!accountId) {
+            container.innerHTML = '<p style="font-size:11px; color:#ef4444;">No active accounts for analysis.</p>';
+            return;
+        }
+
+        container.innerHTML = '<p style="font-size:12px; color:#94a3b8; animation: pulse 1.5s infinite;">🤖 Analyzing data...</p>';
+
+        fetch(`/api/forecast/${accountId}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.ok && data.predictions.length > 0) {
+                    let html = '<div style="margin-top:10px;">';
+                    data.predictions.forEach(p => {
+                        html += `
+                            <div class="forecast-row">
+                                <span class="forecast-date">${p.date.split('-').slice(1).join('/')}</span>
+                                <span class="forecast-value">$${p.predicted_balance.toLocaleString()}</span>
+                            </div>
+                        `;
+                    });
+                    html += '</div>';
+                    container.innerHTML = html;
+                } else {
+                    container.innerHTML = '<p style="font-size:11px; color:#94a3b8;">Not enough transaction history for prediction yet.</p>';
+                }
+            })
+            .catch(err => {
+                container.innerHTML = '<p style="font-size:11px; color:#ef4444;">Error connecting to AI service.</p>';
+            });
+    }
+</script>
+{% endblock %}

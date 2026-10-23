@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+
+{% block title %}Profile - SecureBank{% endblock %}
+
+{% block content %}
+{% include "partials/top_nav.html" %}
+
+<div class="dashboard-shell">
+    <section class="fin-card">
+        <header class="section-header">
+            <div class="profile-title">
+                <h2 style="margin:0;">{{ customer['full_name'] if customer else 'User' }}</h2>
+                <span class="verified-badge-small">Verified Account</span>
+            </div>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-outline">Back</a>
+        </header>
+        <p class="section-subtitle" style="margin-top:-8px;">Personal and banking details secured by SecureBank</p>
+
+        <div class="profile-grid">
+            <section class="fin-card fin-card-light">
+                <h2>Personal Information</h2>
+                <div class="profile-row">
+                    <span class="label">Full Name</span>
+                    <span class="value">{{ customer['full_name'] if customer else 'N/A' }}</span>
+                </div>
+                <div class="profile-row">
+                    <span class="label">Email</span>
+                    <span class="value">{{ customer['email'] if customer else 'N/A' }}</span>
+                </div>
+                <div class="profile-row">
+                    <span class="label">Phone</span>
+                    <span class="value">{{ customer['phone'] if customer and customer['phone'] else 'Not provided'
+                        }}</span>
+                </div>
+                <div class="profile-row">
+                    <span class="label">Customer Since</span>
+                    <span class="value">{{ customer['created_at'].strftime('%Y-%m-%d') if customer and
+                        customer['created_at'] else 'N/A' }}</span>
+                </div>
+            </section>
+
+            <section class="fin-card fin-card-inset">
+                <h2>Banking Details</h2>
+                {% if primary_account %}
+                <div class="profile-row">
+                    <span class="label">Primary Account Type</span>
+                    <span class="value">{{ primary_account['account_type'] if primary_account['account_type'] else 'N/A'
+                        }}</span>
+                </div>
+
+                <div class="profile-row">
+                    <span class="label">Account Number</span>
+                    <div class="value value-sensitive">
+                        {% if primary_account['account_number'] %}
+                        <span id="account-number" class="mono masked">
+                            •••• •••• {{ primary_account['account_number'][-4:] }}
+                        </span>
+                        <button type="button" class="icon-btn"
+                            onclick="toggleMask('account-number', '{{ primary_account.account_number }}')"
+                            aria-label="Show/Hide">
+                            Show/Hide
+                        </button>
+                        <button type="button" class="icon-btn"
+                            onclick="copyToClipboard('{{ primary_account.account_number }}')" aria-label="Copy">
+                            Copy
+                        </button>
+                        {% else %}
+                        <span style="color:#94a3b8;">Not available (run `seed_mock_users.py` or backfill)</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="profile-row">
+                    <span class="label">IFSC Code</span>
+                    <div class="value value-sensitive">
+                        {% if primary_account['ifsc_code'] %}
+                        <span id="ifsc-code" class="mono">{{ primary_account['ifsc_code'] }}</span>
+                        <button type="button" class="icon-btn"
+                            onclick="copyToClipboard('{{ primary_account.ifsc_code }}')" aria-label="Copy IFSC">
+                            Copy
+                        </button>
+                        {% else %}
+                        <span style="color:#94a3b8;">Not available</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="profile-row">
+                    <span class="label">Branch</span>
+                    <span class="value">{{ primary_account['branch_name'] if primary_account['branch_name'] else 'Not
+                        available' }}</span>
+                </div>
+                {% else %}
+                <p style="color:#94a3b8;">No active accounts found.</p>
+                {% endif %}
+            </section>
+        </div>
+
+        {% if accounts and accounts|length > 1 %}
+        <div class="fin-card" style="margin-top:24px;">
+            <h2>All Linked Accounts</h2>
+            <div class="fin-table-wrap">
+                <table class="fin-table">
+                    <thead>
+                        <tr>
+                            <th>Account ID</th>
+                            <th>Type</th>
+                            <th>Account Number</th>
+                            <th>IFSC</th>
+                            <th>Branch</th>
+                            <th>Balance</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for acc in accounts %}
+                        <tr>
+                            <td>#{{ acc['account_id'] }}</td>
+                            <td>{{ acc['account_type'] }}</td>
+                            <td class="mono">{% if acc['account_number'] %}•••• •••• {{ acc['account_number'][-4:] }}{%
+                                else %}N/A{% endif %}</td>
+                            <td class="mono">{{ acc['ifsc_code'] if acc['ifsc_code'] else 'N/A' }}</td>
+                            <td>{{ acc['branch_name'] if acc['branch_name'] else 'N/A' }}</td>
+                            <td>${{ "%.2f"|format(acc['balance']) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+    </section>
+</div>
+
+<script>
+    function copyToClipboard(text) {
+        navigator.clipboard.writeText(text).then(function () {
+            alert('Copied to clipboard');
+        }).catch(function () {
+            alert('Unable to copy');
+        });
+    }
+
+    function toggleMask(elementId, fullValue) {
+        const el = document.getElementById(elementId);
+        if (!el) return;
+        const current = el.textContent.trim();
+        if (current === fullValue) {
+            el.textContent = '•••• •••• ' + fullValue.slice(-4);
+        } else {
+            el.textContent = fullValue;
+        }
+    }
+</script>
+{% endblock %}

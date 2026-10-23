@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}Transaction History - SecureBank{% endblock %}
+
+{% block content %}
+{% include "partials/top_nav.html" %}
+
+<div class="dashboard-shell">
+    <section class="fin-card">
+        <header class="section-header">
+            <div>
+                <h2>Transaction History</h2>
+                <p class="section-subtitle">Account #{{ account.account_id }} · {{ account.account_type }} · Balance:
+                    ${{ "%.2f"|format(account.balance) }}</p>
+            </div>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-outline">Back</a>
+        </header>
+
+        {% if transactions %}
+        <div class="fin-table-wrap">
+            <table class="fin-table">
+                <thead>
+                    <tr>
+                        <th>Date/Time</th>
+                        <th>Transaction Type</th>
+                        <th>From Account</th>
+                        <th>To Account</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for transaction in transactions %}
+                    <tr>
+                        <td>{{ transaction.transaction_timestamp.strftime('%Y-%m-%d %H:%M:%S') if
+                            transaction.transaction_timestamp else 'N/A' }}</td>
+                        <td>{{ transaction.transaction_type }}</td>
+                        <td>#{{ transaction.from_account_id if transaction.from_account_id else 'N/A' }}</td>
+                        <td>#{{ transaction.to_account_id }}</td>
+                        <td
+                            class="amount-cell {% if transaction.from_account_id == account.account_id %}amount-negative{% else %}amount-positive{% endif %}">
+                            {% if transaction.from_account_id == account.account_id %}
+                            -${{ "%.2f"|format(transaction.amount) }}
+                            {% else %}
+                            +${{ "%.2f"|format(transaction.amount) }}
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="status-badge status-{{ transaction.status.lower() }}">
+                                {{ transaction.status }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="no-accounts">
+            <p>No transaction history found for this account.</p>
+        </div>
+        {% endif %}
+
+        <div class="fin-hint">
+            <p><strong>Performance Note:</strong> Uses an indexed timestamp column for fast retrieval.</p>
+        </div>
+    </section>
+</div>
+{% endblock %}
